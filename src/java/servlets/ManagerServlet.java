@@ -26,6 +26,7 @@ import session.BookFacade;
  * @author pupil
  */
 @WebServlet(name = "ManagerServlet", urlPatterns = {
+    "/index",
     "/addBook", 
     "/createBook", 
     "/editBook", 
@@ -55,7 +56,7 @@ public class ManagerServlet extends HttpServlet {
             case "/index":
                 List<Book> books = bookFacade.findAll();
                 request.setAttribute("books", books);
-                request.getRequestDispatcher("/addBook.jsp").forward(request, response);
+                request.getRequestDispatcher("/index.jsp").forward(request, response);
                 break;
             case "/addBook":
                 List<Autor> authors = autorFacade.findAll();
@@ -78,6 +79,7 @@ public class ManagerServlet extends HttpServlet {
                 book.setQuantity(Integer.parseInt(quantity));
                 book.setPublication_year(Integer.parseInt(publicationYear));
                 book.setCount(book.getQuantity());
+                bookFacade.create(book);
                 request.getRequestDispatcher("/addBook.jsp").forward(request, response);
                 break;
             case "/editBook":

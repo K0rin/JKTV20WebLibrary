@@ -54,16 +54,22 @@
 </nav>
         <div class="container d-flex justify-content-center">
             <c:forEach var="book" items="${books}">
-                <div class="card" style="width: 20rem;">${book.caption}
+                
+                <div class="card border-light mb-3" style="width: 20rem;">
+                    <div class="card-header">${book.caption}</div>
                     <img src="..." class="card-img-top" alt="...">
                     <div class="card-body">
-                      <h2 class="card-title">Автор книги</h2>
-                      <h3 class="card-title">Количество экземпляров</h3>
-                      <h4 class="card-title">Аннотация</h4>
+                        <h4 class="card-title">
+                            <c:forEach var="author" items="${book.author}">
+                                ${author.name} ${author.lastname}. ${author.year}.&nbsp;
+                            </c:forEach>
+                        </h4>
+                      <h5 class="card-title">Количество экземпляров: ${book.count}</h5>
                       <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
                       <a href="#" class="btn btn-primary">Go somewhere</a>
                     </div>
                 </div>
+               
             </c:forEach>
             
             

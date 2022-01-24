@@ -61,7 +61,7 @@
 
                             <div class="form-group mb-3">
                               <label for="caption" class="form-label mt-4">Название книги</label>
-                              <input type="text" class="form-control" id="caption" aria-describedby="caption" placeholder="Введите название книги">
+                              <input type="text" class="form-control" id="caption" name="caption" aria-describedby="caption" placeholder="Введите название книги">
                               <small id="emailHelp" class="form-text text-muted d-none">Это поле не должно быть пустым.</small>
                             </div>
                             
@@ -85,8 +85,6 @@
                               <input type="text" class="form-control" id="quantity" name="quantity" aria-describedby="bookCount" placeholder="Введите количество">
                               <small id="emailHelp" class="form-text d-none">Это поле не должно быть пустым.</small>
                             </div>
-
-                            
 
                             <button type="submit" class="btn btn-primary">Добавить книгу</button>
                   </fieldset>
