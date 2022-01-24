@@ -5,13 +5,21 @@
  */
 package servlets;
 
+import entity.Autor;
+import entity.Book;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import javax.ejb.EJB;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import session.AutorFacade;
+import session.BookFacade;
 
 /**
  *
@@ -25,7 +33,10 @@ import javax.servlet.http.HttpServletResponse;
     "/addAuthor", 
     "/createAuthor"})
 public class ManagerServlet extends HttpServlet {
-
+    
+    @EJB private AutorFacade autorFacade;
+    @EJB private BookFacade bookFacade;
+    
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -41,10 +52,32 @@ public class ManagerServlet extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         String path = request.getServletPath();
         switch (path) {
-            case "/addBook":             
+            case "/index":
+                List<Book> books = bookFacade.findAll();
+                request.setAttribute("books", books);
                 request.getRequestDispatcher("/addBook.jsp").forward(request, response);
                 break;
-            case "/createBook":             
+            case "/addBook":
+                List<Autor> authors = autorFacade.findAll();
+                request.setAttribute("authors", authors);
+                request.getRequestDispatcher("/addBook.jsp").forward(request, response);
+                break;
+            case "/createBook":
+                String caption = request.getParameter("caption");
+                String [] bookAuthors = request.getParameterValues("authors");
+                String publicationYear = request.getParameter("publicationYear");
+                String quantity = request.getParameter("quantity");
+                Book book = new Book();
+                book.setCaption(caption);
+                List<Autor> listBookAutors = new ArrayList<>();
+                for (int i = 0; i < bookAuthors.length; i++) {
+                    String authorId = bookAuthors[i];
+                    listBookAutors.add(autorFacade.find(Long.parseLong(authorId)));
+                }
+                book.setAuthor(listBookAutors);
+                book.setQuantity(Integer.parseInt(quantity));
+                book.setPublication_year(Integer.parseInt(publicationYear));
+                book.setCount(book.getQuantity());
                 request.getRequestDispatcher("/addBook.jsp").forward(request, response);
                 break;
             case "/editBook":
