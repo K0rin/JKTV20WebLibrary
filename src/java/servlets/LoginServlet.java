@@ -5,6 +5,7 @@
  */
 package servlets;
 
+import entity.Book;
 import entity.Reader;
 import entity.Role;
 import entity.User;
@@ -17,6 +18,9 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import session.AutorFacade;
+import session.BookFacade;
 import session.ReaderFacade;
 import session.RoleFacade;
 import session.UserFacade;
@@ -27,8 +31,9 @@ import session.UserRoleFacade;
  * @author pupil
  */
 @WebServlet(name = "LoginServlet", loadOnStartup = 1, urlPatterns = {
+    "/index.jsp",
     "/showLogin",
-    "/Login",
+    "/login",
     "/logout"})
 public class LoginServlet extends HttpServlet {
     
@@ -36,6 +41,7 @@ public class LoginServlet extends HttpServlet {
     @EJB private RoleFacade roleFacade;
     @EJB private UserRoleFacade userRoleFacade;
     @EJB private ReaderFacade readerFacade;
+    @EJB private BookFacade bookFacade;
     
     @Override
     public void init() throws ServletException {
@@ -96,13 +102,33 @@ public class LoginServlet extends HttpServlet {
         String path = request.getServletPath();
         request.setCharacterEncoding("UTF-8");
         switch (path) {
+            case "/index.jsp":
+                List<Book> books = bookFacade.findAll();
+                request.setAttribute("books", books);
+                request.getRequestDispatcher("/listBooks.jsp").forward(request, response);
+                break;
             case "/showLogin":
                 
                 request.getRequestDispatcher("showLogin.jsp").forward(request, response);
                 break;
             case "/login":
-                
-                request.getRequestDispatcher("index.jsp").forward(request, response);
+                String login = request.getParameter("login");
+                String password = request.getParameter("password");
+                User authUser = userFacade.find(login);
+                //authentification
+                if(authUser == null){
+                    request.setAttribute("info", "Нет такого пользователя или неправильный пароль");
+                    request.getRequestDispatcher("/showLogin").forward(request, response);
+                }
+                if(!password.equals(authUser.getPassword())){
+                    request.setAttribute("info", "Нет такого пользователя или неправильный пароль");
+                    request.getRequestDispatcher("/showLogin").forward(request, response);
+                }
+                HttpSession session = request.getSession(true);
+                session.setAttribute("authUser", authUser);
+                String info = authUser.getReader().getFirstname()+", Вы успешно вошли";
+                request.setAttribute("info", info);
+                request.getRequestDispatcher("/showLogin").forward(request, response);
                 break;
             case "/logout":
                 
