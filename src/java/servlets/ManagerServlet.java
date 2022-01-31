@@ -7,6 +7,7 @@ package servlets;
 
 import entity.Autor;
 import entity.Book;
+import entity.User;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -18,8 +19,10 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import session.AutorFacade;
 import session.BookFacade;
+import session.UserRoleFacade;
 
 /**
  *
@@ -36,6 +39,7 @@ public class ManagerServlet extends HttpServlet {
     
     @EJB private AutorFacade autorFacade;
     @EJB private BookFacade bookFacade;
+    @EJB private UserRoleFacade userRolesFacade;
     
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -50,7 +54,25 @@ public class ManagerServlet extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         request.setCharacterEncoding("UTF-8");
-        String path = request.getServletPath();
+        HttpSession session = request.getSession(false);
+        if(session == null){
+            request.setAttribute("info", "У вас нет прав. Войдите с правами менеджера");
+            request.getRequestDispatcher("/showLogin").forward(request, response);
+            return;
+        }
+        User authUser = (User) session.getAttribute("authUser");
+        if(authUser == null){
+            request.setAttribute("info", "У вас нет прав. Войдите с правами менеджера");
+            request.getRequestDispatcher("/showLogin").forward(request, response);
+            return;
+        }
+        
+        if(!userRolesFacade.isRole("ADMINISTRATOR", authUser)){
+            request.setAttribute("info", "У вас нет прав. Войдите с правами менеджера");
+            request.getRequestDispatcher("/showLogin").forward(request, response);
+            return;
+        }
+        String path = request.getServletPath();       
         switch (path) {
             
             case "/addBook":

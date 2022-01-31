@@ -5,6 +5,7 @@
  */
 package servlets;
 
+import com.sun.xml.ws.security.impl.policy.Constants;
 import entity.Book;
 import entity.Reader;
 import entity.Role;
@@ -25,6 +26,7 @@ import session.ReaderFacade;
 import session.RoleFacade;
 import session.UserFacade;
 import session.UserRoleFacade;
+import tools.EncryptPassword;
 
 /**
  *
@@ -42,6 +44,7 @@ public class LoginServlet extends HttpServlet {
     @EJB private UserRoleFacade userRoleFacade;
     @EJB private ReaderFacade readerFacade;
     @EJB private BookFacade bookFacade;
+    private EncryptPassword encryptPassword;
     
     @Override
     public void init() throws ServletException {
@@ -50,7 +53,11 @@ public class LoginServlet extends HttpServlet {
         if(users.isEmpty()){
             User user = new User();
             user.setLogin("admin");
-            user.setPassword("12345");
+            encryptPassword = new EncryptPassword();
+            String salt = encryptPassword.createSalt();
+            user.setSalt(salt);
+            String hashPassword = encryptPassword.createHash("12345", salt);
+            user.setPassword(hashPassword);
             Reader reader = new Reader();
             reader.setFirstname("admin");
             reader.setLastname("admin");
@@ -99,16 +106,15 @@ public class LoginServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        String path = request.getServletPath();
         request.setCharacterEncoding("UTF-8");
+        String path = request.getServletPath();
         switch (path) {
             case "/index.jsp":
                 List<Book> books = bookFacade.findAll();
                 request.setAttribute("books", books);
                 request.getRequestDispatcher("/listBooks.jsp").forward(request, response);
                 break;
-            case "/showLogin":
-                
+            case "/showLogin":        
                 request.getRequestDispatcher("showLogin.jsp").forward(request, response);
                 break;
             case "/login":
@@ -117,21 +123,35 @@ public class LoginServlet extends HttpServlet {
                 User authUser = userFacade.find(login);
                 //authentification
                 if(authUser == null){
-                    request.setAttribute("info", "Нет такого пользователя или неправильный пароль");
+                    request.setAttribute("info", "Произошла ошибка обратитесь к разработчику");
                     request.getRequestDispatcher("/showLogin").forward(request, response);
+                    break;
                 }
-                if(!password.equals(authUser.getPassword())){
+                encryptPassword = new EncryptPassword();
+                String hashPassword = encryptPassword.createHash(password, authUser.getSalt());
+                if(hashPassword == null){
                     request.setAttribute("info", "Нет такого пользователя или неправильный пароль");
                     request.getRequestDispatcher("/showLogin").forward(request, response);
+                    break;
+                }
+                if(!hashPassword.equals(authUser.getPassword())){
+                    request.setAttribute("info", "Нет такого пользователя или неправильный пароль");
+                    request.getRequestDispatcher("/showLogin").forward(request, response);
+                    break;
                 }
                 HttpSession session = request.getSession(true);
                 session.setAttribute("authUser", authUser);
+                
                 String info = authUser.getReader().getFirstname()+", Вы успешно вошли";
                 request.setAttribute("info", info);
                 request.getRequestDispatcher("/showLogin").forward(request, response);
                 break;
             case "/logout":
-                
+                session = request.getSession(false);
+                if(session != null){
+                    session.invalidate();
+                    request.setAttribute("info", "Вы успешно вышли");
+                }
                 request.getRequestDispatcher("index.jsp").forward(request, response);
                 break;
             default:
